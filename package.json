@@ -1,0 +1,23 @@
+{
+	"name": "socks5",
+	"description": "SOCKS v5 client socket",
+	"version": "0.0.1",
+	"main": "lib/ProxySocket.js",
+	"author": {
+		"name": "Kristopher Ives",
+		"email": "kristopher.ives@gmail.com",
+		"url": "https://github.com/krisives"
+	},
+	"dependencies": {
+		
+	},
+	"engines": {
+		"node": "0.x"
+	},
+	"licenses": [
+		{
+			"type": "MIT",
+			"url": "http://mattcg.mit-license.org/"
+		}
+	]
+}
