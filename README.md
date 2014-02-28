@@ -1,4 +1,3 @@
-
 # SOCKS5
 
 A module for connecting and listening on SOCKS5 proxies. This is mainly
@@ -9,7 +8,7 @@ recent versions of NodeJS (in particular `node-webkit`
 
 First require the module:
 
-	var ProxySocket = require('socks5');
+	var ProxySocket = require('proxysocket');
 
 Create a `ProxySocket` object, passing the host and port
 that the SOCKS5 proxy is bound to. For example if you were
