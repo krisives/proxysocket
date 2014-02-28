@@ -2,7 +2,7 @@
 
 A Node.js module for connecting to a SOCKS5 proxy. This is mainly
 a rewrite of `socks5-client` as that module was not working for me in more
-recent versions of NodeJS (in particular `node-webkit`
+recent versions of NodeJS (in particular `node-webkit`)
 
 # Making Connections
 
