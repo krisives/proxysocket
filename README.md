@@ -1,6 +1,6 @@
-# SOCKS5
+# ProxySocket
 
-A module for connecting and listening on SOCKS5 proxies. This is mainly
+A Node.js module for connecting to a SOCKS5 proxy. This is mainly
 a rewrite of `socks5-client` as that module was not working for me in more
 recent versions of NodeJS (in particular `node-webkit`
 
