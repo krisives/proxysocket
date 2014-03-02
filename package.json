@@ -1,8 +1,9 @@
 {
-	"name": "socks5",
+	"name": "proxysocket",
 	"description": "SOCKS v5 client socket",
 	"version": "0.0.1",
 	"main": "lib/ProxySocket.js",
+	"homepage": "https://github.com/krisives/proxysocket",
 	"author": {
 		"name": "Kristopher Ives",
 		"email": "kristopher.ives@gmail.com",
@@ -13,6 +14,11 @@
 	},
 	"engines": {
 		"node": "0.x"
+	},
+	"bugs": "https://github.com/krisives/proxysocket/issues",
+	"repository": {
+		"type" : "git",
+		"url" : "https://github.com/krisives/proxysocket.git"
 	},
 	"licenses": [
 		{
