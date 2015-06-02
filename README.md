@@ -33,9 +33,9 @@ Also note if you're using Tor it's fine to pass `.onion` hosts:
 
 You can use `ProxySocket.createAgent()` to create an object
 like `http.Agent` which will make proxy sockets for you. Here is
-an example of making an http requet:
+an example of making an http request:
 
-	var ProxySocket = require('ProxySocket');
+	var ProxySocket = require('proxysocket');
 	var http = require('http');
 	var agent = ProxySocket.createAgent();
 
