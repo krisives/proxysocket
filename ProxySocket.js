@@ -229,7 +229,38 @@ function ProxySocket(socksHost, socksPort, socket) {
 			buffer.push(c);
 		}
 	}
+	
+	//assume that ip is correct
+	function parseIPv4(host, buffer) {
+		var i, n;
+		var parts = host.split('.');
+		for (i = 0; i < parts.length; ++i) {
+			n = parseInt(parts[i], 10);
+			buffer.push(n);
+		}
+	}
 
+	//assume that ip is correct
+	function parseIPv6(host, buffer) {
+		var parts = host.split(':');
+		var i, ind;
+		var zeros = [];
+		parts[0] = parts[0] || '0000';
+		parts[parts.length - 1] = parts[parts.length - 1] || '0000';
+		ind = parts.indexOf('');
+		if (ind >= 0) {
+			for (i = 0; i < 8 - parts.length + 1; ++i) {
+				zeros.push('0000');
+			}
+			parts = parts.slice(0, ind).concat(zeros).concat(parts.slice(ind + 1));
+		}
+		for (i = 0; i < 8; ++i) {
+			var num = parseInt(parts[i], 16);
+			buffer.push(num / 256 | 0);
+			buffer.push(num % 256);
+		}
+	}
+	
 	function sendConnect() {
         var request;
 		var buffer = [
@@ -248,14 +279,10 @@ function ProxySocket(socksHost, socksPort, socket) {
 				buffer.push(0x01);
 				parseIPv4(host, buffer);
 				break;
-			//case 6:
-			//	buffer.push(0x04);
-			//	if (parseIPv6(host, buffer) === false) {
-			//		self.emit('error', new Error('IPv6 host parsing failed. Invalid address.'));
-			//		return;
-			//	}
-			//
-			//	break;
+			case 6:
+				buffer.push(0x04);
+				parseIPv6(host, buffer)
+				break;
 		}
 
 		htons(buffer, buffer.length, port);
