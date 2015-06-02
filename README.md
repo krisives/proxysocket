@@ -4,7 +4,7 @@ A Node.js module for connecting to a SOCKS5 proxy. This is mainly
 a rewrite of `socks5-client` as that module was not working for me in more
 recent versions of NodeJS (in particular `node-webkit`)
 
-# Making Connections
+## Making Connections
 
 First require the module:
 
@@ -16,7 +16,7 @@ running `tor` without any custom settings/ports you would
 use port `9050`
 
 	var socket = new ProxySocket('localhost', 9050);
-	
+
 The returned socket behaves like an ordinary `Socket` object
 and you can call `connect()` on it:
 
@@ -29,4 +29,17 @@ Also note if you're using Tor it's fine to pass `.onion` hosts:
 	socket.connect('p4fsi4ockecnea7l.onion', 6667);
 
 
+## Making HTTP Requests
 
+You can use `ProxySocket.createAgent()` to create an object
+like `http.Agent` which will make proxy sockets for you. Here is
+an example of making an http requet:
+
+	var ProxySocket = require('ProxySocket');
+	var http = require('http');
+	var agent = ProxySocket.createAgent();
+
+	http.request({
+		host: 'foo.com',
+		agent: agent
+	});

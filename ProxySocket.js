@@ -14,22 +14,22 @@ var inherits = require('util').inherits;
 
 // Converts a 16-bit short from Host To Network Storage
 function htons(b, i, v) {
-    b[i] = (0xff & (v >> 8));
-    b[i + 1] = (0xff & (v));
+	b[i] = (0xff & (v >> 8));
+	b[i + 1] = (0xff & (v));
 }
 
 // Error messages for when the proxy responds to sendConnect() used in handleConnect()
 var connectErrors = {
 	// Messages are taken from Wikipedia
-    0x00: 'request granted',
-    0x01: 'general failure',
-    0x02: 'connection not allowed by ruleset',
-    0x03: 'network unreachable',
-    0x04: 'host unreachable',
-    0x05: 'connection refused by destination host',
-    0x06: 'TTL expired',
-    0x07: 'command not supported / protocol error',
-    0x08: 'address type not supported'
+	0x00: 'request granted',
+	0x01: 'general failure',
+	0x02: 'connection not allowed by ruleset',
+	0x03: 'network unreachable',
+	0x04: 'host unreachable',
+	0x05: 'connection refused by destination host',
+	0x06: 'TTL expired',
+	0x07: 'command not supported / protocol error',
+	0x08: 'address type not supported'
 };
 
 // Construct for module object
@@ -39,6 +39,10 @@ function ProxySocket(socksHost, socksPort, socket) {
 	var connected = false;
 	var stage = 0;
 	var host = '', port = 0;
+
+	// While the SOCKS connection is going we buffer the
+	// requests to write()
+	var unsent = [];
 
 	// While the socket is still being setup the encoding
 	// is saved as we expect binray encoding on the socket
@@ -51,30 +55,38 @@ function ProxySocket(socksHost, socksPort, socket) {
 
 	// Users can pass their own socket if they already have one
 	// connected to the SOCKS proxy
-	socket = socket || (new net.Socket());
+	socket = socket || (new net.Socket({
+		readable: true,
+		writable: true
+	}));
 
 	// A socket emits events like 'data' and 'connect'
 	EventEmitter.call(self);
 
-    self.bytesRead = 0;
-    self.bytesWritten = 0;
+	self.bytesRead = 0;
+	self.bytesWritten = 0;
+	self.readable = true;
+	self.writable = true;
 
 	// Read event for the real socket
 	socket.on('data', function (buffer) {
-        self.bytesRead += buffer.length;
+		self.bytesRead += buffer.length;
 
-		// Emit an event useful for debugging the raw SOCKS data
-		self.emit('socksdata', buffer);
-
-        ProxySocket.TotalReceived += buffer.length;
+		ProxySocket.TotalReceived += buffer.length;
 
 		if (connected) {
-			// Pass data though already connected socket
+			if (typeof buffer === 'string') {
+				buffer = new Buffer(buffer, 'binary');
+			}
+
 			self.emit('data', buffer);
 		} else {
 			if (typeof buffer === 'string') {
 				buffer = new Buffer(buffer, 'binary');
 			}
+
+			// Emit an event useful for debugging the raw SOCKS data
+			self.emit('socksdata', buffer);
 
 			// Handle SOCKS protocol data
 			handleData(buffer);
@@ -86,6 +98,8 @@ function ProxySocket(socksHost, socksPort, socket) {
 	});
 
 	socket.on('end', function () {
+		self.writable = false;
+
 		self.emit('end');
 	});
 
@@ -94,6 +108,8 @@ function ProxySocket(socksHost, socksPort, socket) {
 	});
 
 	socket.on('close', function () {
+		self.writable = false;
+
 		if (connected) {
 			self.emit('close');
 		}
@@ -120,20 +136,28 @@ function ProxySocket(socksHost, socksPort, socket) {
 	};
 
 	self.destroy = function () {
+		self.writable = false;
+
 		return socket.destroy();
 	};
 
-    self.ref = function () {
-        return socket.ref();
-    };
+	self.destroySoon = function () {
+		self.writable = false;
 
-    self.unref = function () {
-        return socket.unref();
-    };
+		return socket.destroySoon();
+	};
 
-    self.setKeepAlive = function (enable, initialDelay) {
-        return socket.setKeepAlive(enable, initialDelay);
-    };
+	self.ref = function () {
+		return socket.ref();
+	};
+
+	self.unref = function () {
+		return socket.unref();
+	};
+
+	self.setKeepAlive = function (enable, initialDelay) {
+		return socket.setKeepAlive(enable, initialDelay);
+	};
 
 	var connectionStages = [
 		handleAuth,
@@ -191,12 +215,10 @@ function ProxySocket(socksHost, socksPort, socket) {
 		}
 
 		connected = true;
-		self.readable = true;
-		self.writable = true;
 
 		// TODO map some of the addresses?
-        self.localPort = socket.localPort;
-        self.localAddress = socket.localAddress;
+		self.localPort = socket.localPort;
+		self.localAddress = socket.localAddress;
 		self.remotePort = socket.remotePort;
 		self.remoteAddress = socket.remoteAddress;
 		self.bufferSize = socket.bufferSize;
@@ -204,6 +226,14 @@ function ProxySocket(socksHost, socksPort, socket) {
 		// Set the real encoding which could have been
 		// changed while the socket was connecting
 		socket.setEncoding(socketEncoding);
+
+		if (unsent.length) {
+			for (var i=0; i < unsent.length; i++) {
+				socket.write(unsent[i][0], unsent[i][1], unsent[i][2]);
+			}
+
+			unsent = [];
+		}
 
 		// Emit the real 'connect' event
 		self.emit('connect');
@@ -261,14 +291,13 @@ function ProxySocket(socksHost, socksPort, socket) {
 
 		for (i = 0; i < 8; ++i) {
 			var num = parseInt(parts[i], 16);
-
 			buffer.push(num / 256 | 0);
 			buffer.push(num % 256);
 		}
 	}
 
 	function sendConnect() {
-        var request;
+		var request;
 		var buffer = [
 			0x05, // SOCKS version
 			0x01, // Command code: establish a TCP/IP stream connection
@@ -303,9 +332,9 @@ function ProxySocket(socksHost, socksPort, socket) {
 		return socket.setTimeout(timeout, f);
 	};
 
-    self.setNoDelay = function (noDelay) {
-        return socket.setNoDelay(noDelay);
-    };
+	self.setNoDelay = function (noDelay) {
+		return socket.setNoDelay(noDelay);
+	};
 
 	self.connect = function (connectHost, connectPort, f) {
 		if (connected) {
@@ -335,11 +364,13 @@ function ProxySocket(socksHost, socksPort, socket) {
 
 	self.write = function (data, encoding, f) {
 		if (!connected) {
-			throw new Error("Socket is not connected");
+			unsent.push([data, encoding, f]);
+			return;
 		}
 
-        self.bytesWritten += data.length;
-        ProxySocket.TotalSent += data.length;
+		self.bytesWritten += data.length;
+		ProxySocket.TotalSent += data.length;
+
 		return socket.write(data, encoding, f);
 	};
 
@@ -356,6 +387,8 @@ function ProxySocket(socksHost, socksPort, socket) {
 	};
 
 	self.end = function (data, encoding) {
+		socket.writable = false;
+
 		if (!connected) {
 			return socket.end();
 		}
@@ -376,6 +409,32 @@ function ProxySocket(socksHost, socksPort, socket) {
 }
 
 inherits(ProxySocket, EventEmitter);
+
+// A simple agent so that requests can be made using http.request()
+// and anything else using the same Agent API
+ProxySocket.createAgent = function (socksHost, socksPort) {
+	var http = require('http');
+
+	var agent = new http.Agent({
+	//	keepAlive: true
+	});
+
+	function connect(host, port, f) {
+		var socket = new ProxySocket(socksHost, socksPort);
+		socket.connect(host, port, f);
+		return socket;
+	}
+
+	agent.createConnection = function (options, f) {
+		return connect(
+			options.host,
+			options.port,
+			f
+		);
+	};
+
+	return agent;
+};
 
 ProxySocket.TotalSent = 0;
 ProxySocket.TotalReceived = 0;
