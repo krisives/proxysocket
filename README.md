@@ -2,6 +2,8 @@
 
 # ProxySocket
 
+[![Join the chat at https://gitter.im/krisives/proxysocket](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/krisives/proxysocket?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 A Node.js module for connecting to a SOCKS5 proxy. This is mainly
 a rewrite of `socks5-client` as that module was not working for me in more
 recent versions of NodeJS (in particular `node-webkit`)
