@@ -1,8 +1,8 @@
 {
 	"name": "proxysocket",
-	"description": "SOCKS v5 client socket",
-	"version": "0.2.0",
-	"main": "ProxySocket.js",
+	"description": "SOCKS5 client for making socket connections",
+	"version": "1.0.0",
+	"main": "proxysocket.js",
 	"homepage": "https://github.com/krisives/proxysocket",
 	"author": {
 		"name": "Kristopher Ives",
@@ -10,7 +10,7 @@
 		"url": "https://github.com/krisives"
 	},
 	"dependencies": {
-		
+
 	},
 	"engines": {
 		"node": "0.x"
