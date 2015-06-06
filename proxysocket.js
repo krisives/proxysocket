@@ -35,12 +35,12 @@ function proxysocket(socksHost, socksPort, socket) {
 	var socketEncoding = 'utf8';
 
 	// Default host/ports to use if not given
-	socksHost = socksHost || 'localhost';
-	socksPort = socksPort || '9050';
+	self.socksHost = socksHost = socksHost || 'localhost';
+	self.socksPort = socksPort = socksPort || '9050';
 
 	// Users can pass their own socket if they already have one
 	// connected to the SOCKS proxy
-	socket = socket || (new net.Socket({
+	self.realSocket = socket = socket || (new net.Socket({
 		readable: true,
 		writable: true
 	}));
