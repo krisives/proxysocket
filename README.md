@@ -80,7 +80,8 @@ The object returned from `proxysocket.create()` is just like a regular
 `net.Socket`. This documentation lists additions to the API.
 
 *Note This documentation doesn't list all of the methods, properties,
-or events of `net.Socket`, `Readable` or `Writable`.*
+or events of `net.Socket`, `Readable` or `Writable`. See the nodejs
+API reference for those modules.*
 
 ### socket.socksHost
 
