@@ -10,7 +10,7 @@ function proxysocket(socksHost, socksPort, socket) {
 	// Set when we start connect()
 	var connecting = false;
 
-	// Set when SOCKS setup is finished
+	// Set when connection stages are finished
 	var connected = false;
 
 	// Stages in the SOCKS5 connection

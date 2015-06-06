@@ -16,7 +16,7 @@
 		"node": "0.x"
 	},
 	"keywords": [
-		"socks", "proxy", "socks5", "socks4", "tor"
+		"socks", "proxy", "socks5", "socks4", "tor", "socket"
 	],
 	"bugs": "https://github.com/krisives/proxysocket/issues",
 	"repository": {
