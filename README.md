@@ -1,3 +1,5 @@
+[![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/krisives/proxysocket?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
+
 # ProxySocket
 
 A Node.js module for connecting to a SOCKS5 proxy. This is mainly
