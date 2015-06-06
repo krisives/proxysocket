@@ -65,8 +65,8 @@ like `http.Agent` which will make proxy sockets for you when using
 
 Create a new socket object that uses a SOCKS5 proxy provided.
 
-* `socksHost` is the host of the SOCKS5 proxy. Default is `localhost`
-* `socksPort` is the port of the SOCKS5 proxy. Default is `9050`
+* `socksHost` is the host of the proxy. Default is `localhost`
+* `socksPort` is the port of the proxy. Default is `9050`
 * `socket` can be an existing `net.Socket` object. Default is a `new Socket()`
 
 ### proxysocket.createAgent(socksHost, socksPort)
