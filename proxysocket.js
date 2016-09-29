@@ -145,7 +145,7 @@ function proxysocket(socksHost, socksPort, socket) {
 			return socket.pipe(dest, opts);
 		}
 
-		unpiped.push(dest);
+		unpiped.push([dest, opts]);
 		return dest;
 	};
 
@@ -222,7 +222,7 @@ function proxysocket(socksHost, socksPort, socket) {
 
 		if (unpiped.length) {
 			for (var i=0; i < unpiped.length; i++) {
-				socket.pipe(unpiped[i]);
+				socket.pipe(unpiped[i][0], unpiped[i][1]);
 			}
 
 			unpiped = [];
