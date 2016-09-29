@@ -138,6 +138,10 @@ function proxysocket(socksHost, socksPort, socket) {
 		return socket.setKeepAlive(enable, initialDelay);
 	};
 
+	self.pipe = function (dest, opts) {
+		return socket.pipe(dest, opts);
+	};
+
 	// Handle SOCKS protocol specific data
 	function receiveSocksData(data) {
 		while (data && stage < connectionStages.length) {
