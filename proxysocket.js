@@ -74,8 +74,8 @@ function proxysocket(socksHost, socksPort, socket) {
 		}
 	});
 
-	socket.on('error', function () {
-		self.emit('error');
+	socket.on('error', function (e) {
+		self.emit('error', e);
 	});
 
 	socket.on('end', function () {
