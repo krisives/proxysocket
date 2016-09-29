@@ -28,6 +28,8 @@ function proxysocket(socksHost, socksPort, socket) {
 	// While the SOCKS connection is going we buffer the
 	// requests to write()
 	var unsent = [];
+	// and to pipe()
+	var unpiped = [];
 
 	// While the socket is still being setup the encoding
 	// is saved as we expect binray encoding on the socket
@@ -139,7 +141,12 @@ function proxysocket(socksHost, socksPort, socket) {
 	};
 
 	self.pipe = function (dest, opts) {
-		return socket.pipe(dest, opts);
+		if (connected) {
+			return socket.pipe(dest, opts);
+		}
+
+		unpiped.push(dest);
+		return dest;
 	};
 
 	// Handle SOCKS protocol specific data
@@ -211,6 +218,14 @@ function proxysocket(socksHost, socksPort, socket) {
 			}
 
 			unsent = [];
+		}
+
+		if (unpiped.length) {
+			for (var i=0; i < unpiped.length; i++) {
+				socket.pipe(unpiped[i]);
+			}
+
+			unpiped = [];
 		}
 
 		// Emit the real 'connect' event
