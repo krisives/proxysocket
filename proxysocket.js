@@ -34,7 +34,7 @@ function proxysocket(socksHost, socksPort, socket) {
 	// While the socket is still being setup the encoding
 	// is saved as we expect binray encoding on the socket
 	// until then
-	var socketEncoding = 'utf8';
+	var socketEncoding = null;
 
 	// Default host/ports to use if not given
 	self.socksHost = socksHost = socksHost || 'localhost';
@@ -56,16 +56,8 @@ function proxysocket(socksHost, socksPort, socket) {
 	// Read event for the real socket
 	socket.on('data', function (buffer) {
 		if (connected) {
-			if (typeof buffer === 'string') {
-				buffer = new Buffer(buffer, 'binary');
-			}
-
 			self.emit('data', buffer);
 		} else {
-			if (typeof buffer === 'string') {
-				buffer = new Buffer(buffer, 'binary');
-			}
-
 			// Emit an event useful for debugging the raw SOCKS data
 			self.emit('socksdata', buffer);
 
@@ -210,7 +202,7 @@ function proxysocket(socksHost, socksPort, socket) {
 
 		// Set the real encoding which could have been
 		// changed while the socket was connecting
-		socket.setEncoding(socketEncoding);
+		setEncoding(socketEncoding);
 
 		if (unsent.length) {
 			for (var i=0; i < unsent.length; i++) {
@@ -349,7 +341,7 @@ function proxysocket(socksHost, socksPort, socket) {
 			self.on('connect', f);
 		}
 
-		socket.setEncoding('binary');
+		setEncoding(null);
 
 		socket.connect(socksPort, socksHost, function () {
 			connecting = false;
@@ -390,12 +382,24 @@ function proxysocket(socksHost, socksPort, socket) {
 
 	self.setEncoding = function (encoding) {
 		if (connected) {
-			socket.setEncoding(encoding);
+			setEncoding(encoding);
 		} else {
 			// Save encoding to be set once connected
 			socketEncoding = encoding;
 		}
 	};
+
+	function setEncoding(enc) {
+		if (enc === null) {
+			// Accroding to nodejs documentation, readable.setEncoding(null)
+			// is a way to disable encoding.
+			// However, it's not. So, need to hack into readable structure.
+			socket.decoder = null;
+			socket.encoding = null;
+		} else {
+			socket.setEncoding(enc);
+		}
+	}
 
 	return self;
 }
