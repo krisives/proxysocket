@@ -28,11 +28,13 @@ function proxysocket(socksHost, socksPort, socket) {
 	// While the SOCKS connection is going we buffer the
 	// requests to write()
 	var unsent = [];
+	// and to pipe()
+	var unpiped = [];
 
 	// While the socket is still being setup the encoding
 	// is saved as we expect binray encoding on the socket
 	// until then
-	var socketEncoding = 'utf8';
+	var socketEncoding = null;
 
 	// Default host/ports to use if not given
 	self.socksHost = socksHost = socksHost || 'localhost';
@@ -54,16 +56,8 @@ function proxysocket(socksHost, socksPort, socket) {
 	// Read event for the real socket
 	socket.on('data', function (buffer) {
 		if (connected) {
-			if (typeof buffer === 'string') {
-				buffer = new Buffer(buffer, 'binary');
-			}
-
 			self.emit('data', buffer);
 		} else {
-			if (typeof buffer === 'string') {
-				buffer = new Buffer(buffer, 'binary');
-			}
-
 			// Emit an event useful for debugging the raw SOCKS data
 			self.emit('socksdata', buffer);
 
@@ -72,8 +66,8 @@ function proxysocket(socksHost, socksPort, socket) {
 		}
 	});
 
-	socket.on('error', function () {
-		self.emit('error');
+	socket.on('error', function (e) {
+		self.emit('error', e);
 	});
 
 	socket.on('end', function () {
@@ -139,7 +133,12 @@ function proxysocket(socksHost, socksPort, socket) {
 	};
 
 	self.pipe = function (dest, opts) {
-		return socket.pipe(dest, opts);
+		if (connected) {
+			return socket.pipe(dest, opts);
+		}
+
+		unpiped.push([dest, opts]);
+		return dest;
 	};
 
 	// Handle SOCKS protocol specific data
@@ -203,7 +202,7 @@ function proxysocket(socksHost, socksPort, socket) {
 
 		// Set the real encoding which could have been
 		// changed while the socket was connecting
-		socket.setEncoding(socketEncoding);
+		setEncoding(socketEncoding);
 
 		if (unsent.length) {
 			for (var i=0; i < unsent.length; i++) {
@@ -211,6 +210,14 @@ function proxysocket(socksHost, socksPort, socket) {
 			}
 
 			unsent = [];
+		}
+
+		if (unpiped.length) {
+			for (var i=0; i < unpiped.length; i++) {
+				socket.pipe(unpiped[i][0], unpiped[i][1]);
+			}
+
+			unpiped = [];
 		}
 
 		// Emit the real 'connect' event
@@ -334,7 +341,7 @@ function proxysocket(socksHost, socksPort, socket) {
 			self.on('connect', f);
 		}
 
-		socket.setEncoding('binary');
+		setEncoding(null);
 
 		socket.connect(socksPort, socksHost, function () {
 			connecting = false;
@@ -375,12 +382,24 @@ function proxysocket(socksHost, socksPort, socket) {
 
 	self.setEncoding = function (encoding) {
 		if (connected) {
-			socket.setEncoding(encoding);
+			setEncoding(encoding);
 		} else {
 			// Save encoding to be set once connected
 			socketEncoding = encoding;
 		}
 	};
+
+	function setEncoding(enc) {
+		if (enc === null) {
+			// Accroding to nodejs documentation, readable.setEncoding(null)
+			// is a way to disable encoding.
+			// However, it's not. So, need to hack into readable structure.
+			socket.decoder = null;
+			socket.encoding = null;
+		} else {
+			socket.setEncoding(enc);
+		}
+	}
 
 	return self;
 }
