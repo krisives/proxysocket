@@ -323,7 +323,7 @@ function proxysocket(socksHost, socksPort, socket) {
 		return socket.setNoDelay(noDelay);
 	};
 
-	self.connect = function (connectHost, connectPort, f) {
+	self.connect = function (connectPort, connectHost, f) {
 		if (connected) {
 			throw new Error("Socket is already connected");
 		}
