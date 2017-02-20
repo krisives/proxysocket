@@ -324,6 +324,15 @@ function proxysocket(socksHost, socksPort, socket) {
 	};
 
 	self.connect = function (connectPort, connectHost, f) {
+		var tmp;
+
+		// Backward compatibility
+		if (typeof(connectHost) === 'number' || isNaN(connectPort)) {
+			tmp = connectHost;
+			connectHost = connectPort;
+			connectPort = tmp;
+		}
+
 		if (connected) {
 			throw new Error("Socket is already connected");
 		}
@@ -421,7 +430,7 @@ proxysocket.createAgent = function (socksHost, socksPort) {
 
 	function connect(host, port, f) {
 		var socket = proxysocket.create(socksHost, socksPort);
-		socket.connect(host, port, f);
+		socket.connect(port, host, f);
 		return socket;
 	}
 
