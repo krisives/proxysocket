@@ -30,7 +30,7 @@ Create a new socket that will use the proxy:
 The returned object behaves like an ordinary `net.Socket` object.
 For example, you can call `connect()` or listen for events:
 
-	socket.connect('website.com', 80, function () {
+	socket.connect(80, 'website.com', function () {
 		// Connected
 	});
 
@@ -40,7 +40,7 @@ For example, you can call `connect()` or listen for events:
 
 Also note if you're using Tor it's fine to pass `.onion` hosts:
 
-	socket.connect('p4fsi4ockecnea7l.onion', 6667);
+	socket.connect(6667, 'p4fsi4ockecnea7l.onion');
 
 
 ### Making HTTP Requests
@@ -58,6 +58,19 @@ like `http.Agent` which will make proxy sockets for you when using
 		agent: agent
 	});
 
+### Chaining
+
+It's fine to pass one proxysocket to another:
+```js
+	var socket1 = proxysocket.create('socks1addr', 9050)
+	var socket2 = proxysocket.create('socks2addr', 9050, socket1)
+
+	socket2.connect(80, 'example.com', function () {
+		// connected
+	})
+```
+The resulting chain:
+socksaddr1:9050 -> socksaddr2:9050 -> example.com
 
 ## API
 
@@ -67,7 +80,8 @@ Create a new socket object that uses a SOCKS5 proxy provided.
 
 * `socksHost` is the host of the proxy. Default is `localhost`
 * `socksPort` is the port of the proxy. Default is `9050`
-* `socket` can be an existing `net.Socket` object. Default is a `new Socket()`
+* `socket` can be an existing `net.Socket` object or any object with
+the same interface (e.g. `proxysocket`). Default is a `new Socket()`
 
 ### proxysocket.createAgent(socksHost, socksPort)
 
