@@ -352,7 +352,7 @@ function proxysocket(socksHost, socksPort, socket) {
 
 		setEncoding(null);
 
-		socket.connect(socksPort, socksHost, function () {
+		return socket.connect(socksPort, socksHost, function () {
 			connecting = false;
 			sendAuth();
 		});
