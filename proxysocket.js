@@ -1,5 +1,3 @@
-
-
 var net = require('net');
 var EventEmitter = require('events').EventEmitter;
 var inherits = require('util').inherits;
@@ -94,11 +92,12 @@ function proxysocket(socksHost, socksPort, socket) {
 		}
 	});
 
-	socket.on('readable', function () {
-		if (connected) {
-			self.emit('readable');
-		}
-	});
+	// This prevents `data` event from happening
+	//socket.on('readable', function () {
+	//	if (connected) {
+	//		self.emit('readable');
+	//	}
+	//});
 
 	self.read = function (size) {
 		if (!connected) {
@@ -324,15 +323,6 @@ function proxysocket(socksHost, socksPort, socket) {
 	};
 
 	self.connect = function (connectPort, connectHost, f) {
-		var tmp;
-
-		// Backward compatibility
-		if (typeof(connectHost) === 'number' || isNaN(connectPort)) {
-			tmp = connectHost;
-			connectHost = connectPort;
-			connectPort = tmp;
-		}
-
 		if (connected) {
 			throw new Error("Socket is already connected");
 		}
@@ -341,13 +331,35 @@ function proxysocket(socksHost, socksPort, socket) {
 			throw new Error("Socket is already connecting");
 		}
 
-		host = connectHost;
-		port = connectPort;
+		switch (typeof connectPort)
+			{
+				case 'object':
+					host = connectPort.host;
+					port = connectPort.port;
+					break;
+				case 'number':
+					port = connectPort;
+					if(typeof connectHost === "string") {
+						host = connectHost
+					}
+					break;
+				case 'string': // backward compatibility
+					host = connectPort;
+					port = connectHost;
+					break;
+				default:
+					throw new Error("Port is required!");
+			}
+
+		if(!host)
+			throw new Error("Host must be provided.");
+
 		connected = false;
 		connecting = true;
 
-		if (f) {
-			self.on('connect', f);
+		const tCallback = f || connectHost;
+		if (typeof tCallback === "function") {
+			self.on('connect', tCallback);
 		}
 
 		setEncoding(null);
